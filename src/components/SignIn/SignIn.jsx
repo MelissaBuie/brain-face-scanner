@@ -1,4 +1,5 @@
 /* eslint-disable react/prop-types */
+import { API_URL } from '../../config';
 import React from 'react';
 import './SignIn.css';
 
@@ -23,7 +24,7 @@ class SignIn extends React.Component {
     onSubmitSignIn = (e) => {
         e.preventDefault(); 
         
-        fetch('https://peaceful-reef-16481-bb62933f00ed.herokuapp.com/signin', {
+        fetch(`${API_URL}/signin`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({

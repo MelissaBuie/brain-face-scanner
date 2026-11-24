@@ -11,7 +11,7 @@ import Particles from 'react-tsparticles'
 import { loadSlim } from 'tsparticles-slim'
 import { detectFaces } from './lib/faceDetector'
 
-const API_URL = 'https://peaceful-reef-16481-bb62933f00ed.herokuapp.com';
+import { API_URL } from './config';
 
 const initialState = {
   id: '',
