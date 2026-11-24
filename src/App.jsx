@@ -8,7 +8,10 @@ import FaceRecognition from './components/FaceRecognition/FaceRecognition'
 import SignIn from './components/SignIn/SignIn'
 import SignUp from './components/SignUp/SignUp'
 import Particles from 'react-tsparticles'
-import { loadSlim } from 'tsparticles-slim'      
+import { loadSlim } from 'tsparticles-slim'
+import { detectFaces } from './lib/faceDetector'
+
+const API_URL = 'https://peaceful-reef-16481-bb62933f00ed.herokuapp.com';
 
 const initialState = {
   id: '',
@@ -22,8 +25,9 @@ const initialState = {
 function App() {
   const [user, setUser] = useState(initialState);
   const [imageUrl, setImageUrl] = useState("");
-  const [displayImage, setDisplayImage] = useState(false);
-  const [box, setBox] = useState({});
+  const [boxes, setBoxes] = useState([]);
+  const [message, setMessage] = useState("");
+  const [isDetecting, setIsDetecting] = useState(false);
   const [route, setRoute] = useState('signin');
 
   const loadUser = (data) => {
@@ -72,78 +76,53 @@ function App() {
     detectRetina: true,
   };
 
-  const calculateFaceLocation = (data) => {
-    if (data.outputs && data.outputs.length > 0 && data.outputs[0].data.regions && data.outputs[0].data.regions.length > 0) {
-      const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
-      const image = document.getElementById('inputimage');
-      if (image) {
-        const width = Number(image.width);
-        const height = Number(image.height);
-        return {
-          leftCol: clarifaiFace.left_col * width,
-          topRow: clarifaiFace.top_row * height,
-          rightCol: width - (clarifaiFace.right_col * width),
-          bottomRow: height - (clarifaiFace.bottom_row * height),
-        };
-      }
+  const onFileChange = (event) => {
+    const file = event.target.files[0];
+    if (imageUrl) URL.revokeObjectURL(imageUrl); // free the previous photo
+    setImageUrl(file ? URL.createObjectURL(file) : "");
+    setBoxes([]);
+    setMessage("");
+  };
+
+  const onSubmit = async () => {
+    const image = document.getElementById('inputimage');
+    if (!image) {
+      setMessage('Choose a photo first.');
+      return;
     }
-    return {}; // Return an empty object if the data is not in the expected format
-  };
-
-  const displayFaceBox = (box) => {
-    setBox(box);
-  };
-
-  const onInputChange = (event) => {
-    setImageUrl(event.target.value);
-    setDisplayImage(false);
-  }
-
-  const onSubmit = () => {
-    setDisplayImage(true);
-  
-    fetch('https://peaceful-reef-16481-bb62933f00ed.herokuapp.com/imageurl', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-          imageUrl: imageUrl
-      })
-    })
-    .then(response => response.json())
-    .then(result => {
-      if (result.outputs && result.outputs.length > 0 && result.outputs[0].data.regions){
-        const faceData = calculateFaceLocation(result);
-        displayFaceBox(faceData);
-
-        //update user entries on the server
-        fetch('https://peaceful-reef-16481-bb62933f00ed.herokuapp.com/image', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: user.id
-          })
-        })
-        .then(response => response.json())
-        .then(count => {
-          // Update the user's entries in the state
-          setUser(prevUser => ({ ...prevUser, entries: count }));
-        })
-        .catch(error => console.log('Error updating entries:', error));
-      } else {
-        console.log('No regions found in result');
+    setIsDetecting(true);
+    setMessage("");
+    try {
+      if (!image.complete) await image.decode();
+      const faces = await detectFaces(image);
+      setBoxes(faces);
+      if (faces.length === 0) {
+        setMessage('No faces found. Try another photo.');
+        return;
       }
-    })
-    .catch(error => console.log('Error with Clarifai API:', error));
+
+      // Count this detection on the server
+      const response = await fetch(`${API_URL}/image`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: user.id })
+      });
+      const count = await response.json();
+      setUser(prevUser => ({ ...prevUser, entries: count }));
+    } catch (error) {
+      console.log('Error detecting faces:', error);
+      setMessage('Something went wrong. Please try again.');
+    } finally {
+      setIsDetecting(false);
+    }
   };
-  
-  
 
   const handleRouteChange = (route) => {
   if (route === 'signout') {
     setUser(initialState); // Reset user state when signing out
     setImageUrl(""); // Clear image URL
-    setBox({}); // Clear face detection box
-    setDisplayImage(false); // Hide image
+    setBoxes([]); // Clear face detection boxes
+    setMessage("");
     setRoute('signin');   // Redirect to signin page
   } else {
     setRoute(route);      // Set route for other pages
@@ -164,8 +143,8 @@ function App() {
           <><div>
             <Logo />
             <Rank name={user.name} entries={user.entries} />
-            <ImageLinkForm onInputChange={onInputChange} onSubmit={onSubmit} />
-            <FaceRecognition imageUrl={imageUrl} displayImage={displayImage} box={box} />
+            <ImageLinkForm onFileChange={onFileChange} onSubmit={onSubmit} isDetecting={isDetecting} />
+            <FaceRecognition imageUrl={imageUrl} boxes={boxes} message={message} />
           </div>
           </>  // Pass setRoute as onRouteChange prop
         )
