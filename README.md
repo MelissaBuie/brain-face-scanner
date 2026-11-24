@@ -2,7 +2,7 @@
 
 A full-stack React app that finds faces in photos. Users sign up or sign in, upload a photo, and the app draws a box around every face it finds. Face detection runs right in the browser with Google's MediaPipe, so it needs no API key. Each user's entry count is saved in the database and shown when they sign in.
 
-This repo is the **front end**. The back end (Node.js, Express and PostgreSQL) is in [brain-face-scanner-api](https://github.com/the-codingphoenix/brain-face-scanner-api).
+This repo is the **front end**. The back end (Node.js, Express and PostgreSQL) is in [brain-face-scanner-server](https://github.com/the-codingphoenix/brain-face-scanner-server).
 
 <!-- Add a live demo link here once it is deployed, for example: **Live demo:** https://... -->
 
@@ -38,7 +38,7 @@ This repo is the **front end**. The back end (Node.js, Express and PostgreSQL) i
 
 ## Run it locally
 
-You need Node.js 20 and the API running (see the API repo).
+You need Node.js 20 and the API running (see the [server repo](https://github.com/the-codingphoenix/brain-face-scanner-server)).
 
 ```bash
 git clone https://github.com/the-codingphoenix/brain-face-scanner.git
