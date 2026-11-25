@@ -4,7 +4,7 @@ A full-stack React app that finds faces in photos. Users sign up or sign in, upl
 
 This repo is the **front end**. The back end (Node.js, Express and PostgreSQL) is in [brain-face-scanner-server](https://github.com/MelissaBuie/brain-face-scanner-server).
 
-<!-- Add a live demo link here once it is deployed, for example: **Live demo:** https://... -->
+**Live demo:** https://melissabuie.github.io/brain-face-scanner/ (the server sleeps when idle, so the first sign-in can take up to a minute)
 
 <!-- Add a screenshot: save one as public/screenshot.png and uncomment the next line -->
 <!-- ![Brain Face Scanner screenshot](public/screenshot.png) -->
